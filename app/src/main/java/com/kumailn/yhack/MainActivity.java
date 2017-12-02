@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -48,6 +49,7 @@ import com.google.api.services.vision.v1.model.Image;
 import com.google.api.services.vision.v1.model.ImageProperties;
 import com.google.api.services.vision.v1.model.SafeSearchAnnotation;
 import com.google.api.services.vision.v1.model.WebDetection;
+import com.google.api.services.vision.v1.model.WebEntity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -82,7 +84,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     TextView visionAPIData;
     private Feature feature;
     private Bitmap bitmap;
-    private String[] visionAPI = new String[]{"LANDMARK_DETECTION", "LOGO_DETECTION", "SAFE_SEARCH_DETECTION", "IMAGE_PROPERTIES", "LABEL_DETECTION"};
+    private String[] visionAPI = new String[]{"LANDMARK_DETECTION", "LOGO_DETECTION", "SAFE_SEARCH_DETECTION", "IMAGE_PROPERTIES", "LABEL_DETECTION", "WEB_DETECTION"};
 
     private String api = visionAPI[0];
 
@@ -275,6 +277,14 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 entityAnnotations = imageResponses.getLabelAnnotations();
                 message = formatAnnotation(entityAnnotations);
                 break;
+
+            case "WEB_DETECTION":
+                WebDetection webDetection = imageResponses.getWebDetection();
+                Log.e("Web", "on");
+                for (WebEntity entity : webDetection.getWebEntities()) {
+                    Log.e("", entity.getDescription() + " : " + entity.getEntityId() + " : "
+                            + entity.getScore());
+                }
         }
         return message;
     }
@@ -338,13 +348,17 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     public void onImageCapture(@NonNull File imageFile) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.RGB_565;
-        Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+        Bitmap bitmap2 = BitmapFactory.decodeFile(imageFile.getAbsolutePath(), options);
+
+        Matrix matrix = new Matrix();
+        matrix.setRotate(180);
+        Bitmap bitmap = Bitmap.createBitmap(bitmap2, 0, 0, bitmap2.getWidth(), bitmap2.getHeight(), matrix, false);
+
         imageView.setImageBitmap(bitmap);
         callCloudVision(bitmap, feature);
     }
 
     @Override
     public void onCameraError(int errorCode) {
-
     }
 }
