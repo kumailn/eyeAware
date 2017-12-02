@@ -59,7 +59,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-
+//l
 public class MainActivity extends HiddenCameraActivity implements AdapterView.OnItemSelectedListener {
 
     private static final String TAG = "MainActivity";
