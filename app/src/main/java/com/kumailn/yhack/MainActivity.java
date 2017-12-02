@@ -33,10 +33,17 @@ import com.androidhiddencamera.config.CameraImageFormat;
 import com.androidhiddencamera.config.CameraResolution;
 import com.androidhiddencamera.config.CameraRotation;
 import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.language.v1.CloudNaturalLanguage;
+import com.google.api.services.language.v1.CloudNaturalLanguageRequestInitializer;
+import com.google.api.services.language.v1.model.AnnotateTextResponse;
+import com.google.api.services.language.v1.model.Document;
+import com.google.api.services.language.v1.model.Features;
+import com.google.api.services.language.v1.model.Sentiment;
 import com.google.api.services.vision.v1.Vision;
 import com.google.api.services.vision.v1.VisionRequestInitializer;
 import com.google.api.services.vision.v1.model.AnnotateImageRequest;
@@ -114,7 +121,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         });*/
 
         //Setting camera configuration
-        CameraConfig mCameraConfig = new CameraConfig()
+        final CameraConfig mCameraConfig = new CameraConfig()
                 .getBuilder(getApplicationContext())
                 .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
                 .setCameraResolution(CameraResolution.MEDIUM_RESOLUTION)
@@ -124,7 +131,6 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
 
         //Check for the camera permission for the runtime
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-
             //Start camera preview
             startCamera(mCameraConfig);
         } else {
@@ -136,6 +142,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             @Override
             public void onClick(View v) {
                 takePicture();
+
             }
         });
 
@@ -151,9 +158,31 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         takePicture.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                String toSpeak = "This is a test string";
+   /*             String toSpeak = "This is a test string";
                 Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
-                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);*/
+
+           /*     final CloudNaturalLanguage naturalLanguageService = new CloudNaturalLanguage.Builder(
+                        AndroidHttp.newCompatibleTransport(),
+                        new AndroidJsonFactory(),
+                        null
+                ).setCloudNaturalLanguageRequestInitializer(
+                        new CloudNaturalLanguageRequestInitializer("AIzaSyC81BQBhjKdwFt3p68CgWTzR9aR5HVELYQ")
+                ).build();
+
+                Document document = new Document();
+                document.setType("PLAIN_TEXT");
+                document.setLanguage("en-US");
+                document.setContent(transcript);
+
+
+
+                Features features = new Features();
+                features.setExtractEntities(true);
+                features.setExtractDocumentSentiment(true);
+*/
+
+
                 return true;
             }
         });
