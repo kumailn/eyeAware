@@ -1,9 +1,5 @@
 package com.kumailn.yhack;
 
-/**
- * Created by Gabriel on 2017-12-02.
- */
-
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
@@ -15,11 +11,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Provides utility logic for getting the app's SHA1 signature. Used with restricted API keys.
- *
+ * Created by brijesh on 20/7/17.
  */
-public class PackageManagerUtils {
 
+class PackageManagerUtils {
     /**
      * Gets the SHA1 signature, hex encoded for inclusion with Google Cloud Platform API requests
      *
