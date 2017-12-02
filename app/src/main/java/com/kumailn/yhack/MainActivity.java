@@ -10,6 +10,7 @@ import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -23,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.androidhiddencamera.CameraConfig;
 import com.androidhiddencamera.HiddenCameraActivity;
@@ -56,6 +58,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -65,7 +68,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     private static final String TAG = "MainActivity";
     private static final int RECORD_REQUEST_CODE = 101;
     private static final int CAMERA_REQUEST_CODE = 102;
-
+    TextToSpeech t1;
     private static final String CLOUD_VISION_API_KEY = "AIzaSyA40SjWGfxwULJNqVjkVvw3rSgWLNTc4m0";
 
     @BindView(R.id.takePicture)
@@ -135,6 +138,26 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 takePicture();
             }
         });
+
+        t1 = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if(status != TextToSpeech.ERROR) {
+                    t1.setLanguage(Locale.CANADA);
+                }
+            }
+        });
+
+        takePicture.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                String toSpeak = "This is a test string";
+                Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
+                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+                return true;
+            }
+        });
+
     }
 
     @Override
@@ -260,27 +283,36 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             case "LANDMARK_DETECTION":
                 entityAnnotations = imageResponses.getLandmarkAnnotations();
                 message = formatAnnotation(entityAnnotations);
+                Log.e("MSG: ", message);
                 break;
             case "LOGO_DETECTION":
                 entityAnnotations = imageResponses.getLogoAnnotations();
                 message = formatAnnotation(entityAnnotations);
+                Log.e("MSG: ", message);
                 break;
             case "SAFE_SEARCH_DETECTION":
                 SafeSearchAnnotation annotation = imageResponses.getSafeSearchAnnotation();
                 message = getImageAnnotation(annotation);
+                Log.e("MSG: ", message);
                 break;
             case "IMAGE_PROPERTIES":
                 ImageProperties imageProperties = imageResponses.getImagePropertiesAnnotation();
                 message = getImageProperty(imageProperties);
+                Log.e("MSG: ", message);
                 break;
             case "LABEL_DETECTION":
                 entityAnnotations = imageResponses.getLabelAnnotations();
                 message = formatAnnotation(entityAnnotations);
+                Log.e("MSG: ", message);
                 break;
 
             case "WEB_DETECTION":
                 WebDetection webDetection = imageResponses.getWebDetection();
                 Log.e("Web", "on");
+                Log.e("First MSG: ", webDetection.getWebEntities().get(0).getDescription());
+                String toSpeak = webDetection.getWebEntities().get(0).getDescription();
+                //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
+                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
                 for (WebEntity entity : webDetection.getWebEntities()) {
                     Log.e("", entity.getDescription() + " : " + entity.getEntityId() + " : "
                             + entity.getScore());
