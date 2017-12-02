@@ -22,7 +22,7 @@ import com.androidhiddencamera.config.CameraResolution;
 import com.androidhiddencamera.config.CameraRotation;
 
 import java.io.File;
-//hi
+//hih
 public class MainActivity extends HiddenCameraActivity {
 
     @Override
