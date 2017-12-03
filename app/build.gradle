@@ -33,6 +33,7 @@ dependencies {
 
     compile 'com.google.api-client:google-api-client-android:1.22.0'
     compile 'com.google.apis:google-api-services-vision:v1-rev357-1.22.0'
+    compile 'com.google.apis:google-api-services-language:v1beta2-rev6-1.22.0'
     compile 'com.google.code.findbugs:jsr305:2.0.1'
     compile 'com.google.http-client:google-http-client-gson:1.19.0'
 
@@ -47,6 +48,7 @@ dependencies {
 
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
     compile 'commons-io:commons-io:2.5'
+    compile 'com.github.medyo:android-about-page:1.2.2'
     compile 'net.gotev:speech:1.1.2'
 
 

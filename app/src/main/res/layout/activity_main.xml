@@ -37,8 +37,18 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignEnd="@+id/imageView"
+            android:layout_alignRight="@+id/imageView"
             android:layout_below="@+id/imageView"
             android:text="Take Picture" />
+
+        <Button
+            android:id="@+id/analyze"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_toEndOf="@+id/spinnerVisionAPI"
+            android:layout_toRightOf="@+id/spinnerVisionAPI"
+            android:text="Analyze" />
 
         <Spinner
             android:id="@+id/spinnerVisionAPI"
@@ -70,5 +80,17 @@
             android:layout_alignParentRight="true"
             android:layout_marginBottom="19dp"
             android:text="Button" />
+
+        <TextView
+            android:id="@+id/speech_to_text_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/spinnerVisionAPI"
+            android:layout_alignLeft="@+id/imageView"
+            android:layout_alignStart="@+id/imageView"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:text=""
+            android:textSize="18sp" />
     </RelativeLayout>
 </ScrollView>

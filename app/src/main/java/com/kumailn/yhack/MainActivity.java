@@ -2,6 +2,7 @@ package com.kumailn.yhack;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -19,6 +20,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -43,10 +47,17 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.language.v1.CloudNaturalLanguage;
 import com.google.api.services.language.v1.CloudNaturalLanguageRequestInitializer;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxResponse;
+import com.google.api.services.language.v1.model.AnnotateTextRequest;
 import com.google.api.services.language.v1.model.AnnotateTextResponse;
 import com.google.api.services.language.v1.model.Document;
+import com.google.api.services.language.v1.model.Entity;
 import com.google.api.services.language.v1.model.Features;
+import com.google.api.services.language.v1.model.Sentence;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxRequest;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxResponse;
 import com.google.api.services.language.v1.model.Sentiment;
+import com.google.api.services.language.v1.model.Token;
 import com.google.api.services.vision.v1.Vision;
 import com.google.api.services.vision.v1.VisionRequestInitializer;
 import com.google.api.services.vision.v1.model.AnnotateImageRequest;
@@ -85,6 +96,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     private static final int RECORD_REQUEST_CODE = 101;
     private static final int CAMERA_REQUEST_CODE = 102;
     private SpeechRecognizer sr;
+    private static final String CLOUD_API_KEY = "AIzaSyBFJ2oO0tcJSK2qOre48AM1raYgIw2cO5g";
     TextToSpeech t1;
     private static final String CLOUD_VISION_API_KEY = "AIzaSyA40SjWGfxwULJNqVjkVvw3rSgWLNTc4m0";
 
@@ -96,6 +108,9 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
 
     @BindView(R.id.imageView)
     ImageView imageView;
+
+    @BindView(R.id.analyze)
+    Button analyze;
 
     @BindView(R.id.spinnerVisionAPI)
     Spinner spinnerVisionAPI;
@@ -165,6 +180,12 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             ActivityCompat.requestPermissions((Activity) getApplicationContext(), new String[]{Manifest.permission.CAMERA}, 101);
         }
 
+        analyze.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                callNaturalLanguage("roses are red");
+            }
+        });
 
         takePicture.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -309,7 +330,80 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             }
         }
     }
+    private void callNaturalLanguage(final String s){
+        HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+        CloudNaturalLanguageRequestInitializer requestInitializer = new CloudNaturalLanguageRequestInitializer(CLOUD_API_KEY);
+        CloudNaturalLanguage.Builder builder = new CloudNaturalLanguage.Builder(httpTransport, jsonFactory, null);
+        builder.setCloudNaturalLanguageRequestInitializer(requestInitializer);
+        builder.setApplicationName("Application name");
+        final CloudNaturalLanguage naturalLanguageService = builder.build();
 
+        // this string should be what you want to analyze
+        final String transcript = "analyze what is in front of me";
+
+        final Document document = new Document();
+        document.setType("PLAIN_TEXT");
+        document.setLanguage("en-US");
+        document.setContent(transcript);
+
+        final AnalyzeSyntaxRequest request = new AnalyzeSyntaxRequest();
+        request.setDocument(document);
+        request.setEncodingType("UTF16");
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    AnalyzeSyntaxResponse response = naturalLanguageService.documents()
+                            .analyzeSyntax(request).execute();
+
+                    final List<Token> tokenList = response.getTokens();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String FLAG1 = "false";
+                            String lemmas = "";
+                            String tokens = "";
+
+                            for (Token t:tokenList){
+                                lemmas += "\n" + t.getLemma();
+                            }
+                            for (Token t:tokenList){
+                                tokens += "\n" + t.getText().getContent();
+                            }
+                            // what is * type of strings
+                            for (int i = 0; i < tokenList.size()-1; i++){
+                                if (tokenList.get(i).getText().getContent().toUpperCase().hashCode() == "WHAT".hashCode()) {
+                                    if (tokenList.get(i + 1).getLemma().toUpperCase().hashCode() == "BE".hashCode()) {
+                                        FLAG1 = "picture";
+                                    }
+                                }
+                            }
+                            // * read * or * text *type of strings
+                            if (tokens.contains("read")||tokens.contains("text")){
+                                FLAG1 = "read";
+                            }
+
+                            AlertDialog dialog =
+                                    new AlertDialog.Builder(MainActivity.this)
+                                            .setTitle("Sentiment: " )
+                                            .setMessage("Text :"
+                                                    + transcript + "\nFLAG :" + FLAG1 )
+                                            .setNeutralButton("Okay", null)
+                                            .create();
+                            dialog.show();
+                        }
+                    });
+                }
+                catch (IOException e){
+                }
+                // More code here
+            }
+        });
+    }
     private void callCloudVision(final Bitmap bitmap, final Feature feature) {
         imageUploadProgress.setVisibility(View.VISIBLE);
         final List<Feature> featureList = new ArrayList<>();
@@ -383,6 +477,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         //Log.e("TEXT!: ", imageResponses.getWebDetection().toString());
 
         String message = "";
+        String toSpeak = "";
         switch (api) {
             case "LANDMARK_DETECTION":
                 entityAnnotations = imageResponses.getLandmarkAnnotations();
@@ -435,14 +530,21 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 WebDetection webDetection = imageResponses.getWebDetection();
                 Log.e("Web", "on");
                 Log.e("First MSG: ", webDetection.getWebEntities().get(0).getDescription());
-                String toSpeak = webDetection.getWebEntities().get(0).getDescription();
+                toSpeak = webDetection.getWebEntities().get(0).getDescription();
                 //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
-                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+                //t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
                 for (WebEntity entity : webDetection.getWebEntities()) {
+                    if (entity.getDescription().toLowerCase().contains("dollar"))
+                    {
+                        toSpeak = entity.getDescription();
+                        break;
+                    }
                     Log.e("", entity.getDescription() + " : " + entity.getEntityId() + " : "
                             + entity.getScore());
                 }
+                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
         }
+        callNaturalLanguage(toSpeak);
         return message;
     }
 
@@ -517,5 +619,23 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
 
     @Override
     public void onCameraError(int errorCode) {
+    }
+
+    //@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    //@Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.About){
+            Intent name = new Intent(getApplicationContext(),Main2Activity.class);
+            startActivity(name);
+            Toast.makeText(getApplicationContext(), "Click Works", Toast.LENGTH_SHORT).show();
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
