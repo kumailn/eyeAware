@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="0dp">
+
+        <ProgressBar
+            android:id="@+id/imageProgress"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="33dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:indeterminate="true"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@+id/imageView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="visible" />
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_below="@+id/imageProgress"
+            android:layout_centerHorizontal="true"
+            app:srcCompat="@android:drawable/alert_dark_frame"
+            tools:layout_editor_absoluteX="44dp"
+            tools:layout_editor_absoluteY="26dp" />
+
+        <TextView
+            android:id="@+id/visionAPIData"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_alignEnd="@+id/takePicture"
+            android:layout_alignStart="@+id/spinnerVisionAPI"
+            android:layout_below="@+id/spinnerVisionAPI"
+            android:layout_marginBottom="8dp"
+            android:gravity="left"
+            android:textSize="18dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="parent"
+            tools:layout_editor_absoluteX="53dp"
+            tools:text="Text LAbele" />
+
+        <TextView
+            android:id="@+id/speech_to_text_resulti"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/spinnerVisionAPI"
+            android:layout_alignLeft="@+id/imageView"
+            android:layout_alignStart="@+id/imageView"
+            android:text=""
+            android:textSize="18sp"
+            tools:layout_editor_absoluteX="33dp"
+            tools:layout_editor_absoluteY="367dp" />
+
+        <Spinner
+            android:id="@+id/spinnerVisionAPI"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:layout_alignBottom="@+id/takePicture"
+            android:layout_alignStart="@+id/imageView"
+            android:layout_below="@+id/imageView"
+            android:layout_marginBottom="8dp"
+            android:layout_toStartOf="@+id/takePicture"
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+            tools:layout_editor_absoluteX="16dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="0dp"
+        android:layout_height="55dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/takePicture"
+            android:layout_width="118dp"
+            android:layout_height="48dp"
+            android:layout_alignEnd="@+id/imageView"
+            android:layout_alignRight="@+id/imageView"
+            android:layout_below="@+id/imageView"
+            android:layout_weight="1"
+            android:text="Take Picture"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="319dp" />
+
+        <Button
+            android:id="@+id/analyze"
+            android:layout_width="88dp"
+            android:layout_height="48dp"
+            android:layout_alignParentBottom="true"
+            android:layout_toEndOf="@+id/spinnerVisionAPI"
+            android:layout_toRightOf="@+id/spinnerVisionAPI"
+            android:layout_weight="1"
+            android:text="Analyze"
+            tools:layout_editor_absoluteX="148dp"
+            tools:layout_editor_absoluteY="8dp" />
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="88dp"
+            android:layout_height="48dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_weight="1"
+            android:text="Button"
+            tools:layout_editor_absoluteX="214dp"
+            tools:layout_editor_absoluteY="308dp" />
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>

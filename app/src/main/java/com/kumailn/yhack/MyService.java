@@ -18,6 +18,7 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -47,7 +48,7 @@ public class MyService extends Service
     protected boolean mIsListening;
     protected volatile boolean mIsCountDownOn;
     private boolean mIsStreamSolo;
-
+    private static final String CLOUD_API_KEY = "AIzaSyBFJ2oO0tcJSK2qOre48AM1raYgIw2cO5g";
     static final int MSG_RECOGNIZER_START_LISTENING = 1;
     static final int MSG_RECOGNIZER_CANCEL = 2;
 
@@ -283,8 +284,13 @@ public class MyService extends Service
             for (int i = 0; i < data.size(); i++)
             {
                 Log.e("SERVICE: ", "result " + data.get(i));
+/*                callNaturalLanguage((String) data.get(i));
+                Log.e("OUTSIDE: ", callNaturalLanguage((String) data.get(i)));*/
                 str += data.get(i);
             }
+
+            callNaturalLanguage((String) data.get(data.size()-1));
+
 
             if (mIsCountDownOn)
             {
@@ -334,7 +340,7 @@ public class MyService extends Service
         final AnalyzeSyntaxRequest request = new AnalyzeSyntaxRequest();
         request.setDocument(document);
         request.setEncodingType("UTF16");
-        final String[] FLAG1 = new String[1];
+        final String[] FLAG1 = {""};
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -368,6 +374,18 @@ public class MyService extends Service
                             if (tokens.contains("read") || tokens.contains("text")) {
                                 FLAG1[0] = "read";
                             }
+
+                            try{
+                                Log.e("The Flag: ", FLAG1[0]);
+                                Intent intent = new Intent("YourAction");
+                                Bundle bundle = new Bundle();
+                                bundle.putString("google", FLAG1[0]);
+                                intent.putExtras(bundle);
+                                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+
+                            }
+
+                            catch(Exception e){}
 /*
                             AlertDialog dialog =
                                     new AlertDialog.Builder(MainActivity.this)
@@ -384,6 +402,12 @@ public class MyService extends Service
                 // More code here
             }
         });
+        try{
+        Log.e("The Flag: ", FLAG1[0]);}
+        catch(Exception e){}
         return FLAG1[0];
     }
+
+
+
 }

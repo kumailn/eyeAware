@@ -3,11 +3,15 @@ package com.kumailn.yhack;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.media.AudioAttributes;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -18,6 +22,7 @@ import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -91,6 +96,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 //l
 public class MainActivity extends HiddenCameraActivity implements AdapterView.OnItemSelectedListener {
+    private MyBroadcastReceiver myReceiver;
 
     private static final String TAG = "MainActivity";
     private static final int RECORD_REQUEST_CODE = 101;
@@ -128,7 +134,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main3);
         ButterKnife.bind(this);
         speakButton = findViewById(R.id.button2);
         speakButton.setOnClickListener(new View.OnClickListener() {
@@ -167,7 +173,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         final CameraConfig mCameraConfig = new CameraConfig()
                 .getBuilder(getApplicationContext())
                 .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
-                .setCameraResolution(CameraResolution.LOW_RESOLUTION)
+                .setCameraResolution(CameraResolution.MEDIUM_RESOLUTION)
                 .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                 .setImageRotation(CameraRotation.ROTATION_270)
                 .build();
@@ -215,6 +221,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 return true;
             }
         });
+
 
     }
 
@@ -294,6 +301,10 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             takePicture.setVisibility(View.INVISIBLE);
             makeRequest(Manifest.permission.CAMERA);
         }
+
+        myReceiver = new MyBroadcastReceiver();
+        final IntentFilter intentFilter = new IntentFilter("YourAction");
+        LocalBroadcastManager.getInstance(this).registerReceiver(myReceiver, intentFilter);
     }
 
     private int checkPermission(String permission) {
@@ -388,14 +399,14 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                                 FLAG1[0] = "read";
                             }
 
-                            AlertDialog dialog =
+                     /*       AlertDialog dialog =
                                     new AlertDialog.Builder(MainActivity.this)
                                             .setTitle("Sentiment: ")
                                             .setMessage("Text :"
                                                     + transcript + "\nFLAG :" + FLAG1[0])
                                             .setNeutralButton("Okay", null)
                                             .create();
-                            dialog.show();
+                            dialog.show();*/
                         }
                     });
                 } catch (IOException e) {
@@ -544,6 +555,12 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                     Log.e("", entity.getDescription() + " : " + entity.getEntityId() + " : "
                             + entity.getScore());
                 }
+                AudioAttributes aa = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build();
+
+                t1.setAudioAttributes(aa);
                 t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
         }
         callNaturalLanguage(toSpeak);
@@ -639,5 +656,38 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             Toast.makeText(getApplicationContext(), "Click Works", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    public class MyBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Here you have the received broadcast
+            // And if you added extras to the intent get them here too
+            // this needs some null checks
+            Bundle b = intent.getExtras();
+            String yourValue = b.getString("google");
+            Toast.makeText(getApplicationContext(), yourValue, Toast.LENGTH_SHORT).show();
+
+            if(yourValue.equals("picture")){
+                spinnerVisionAPI.setSelection(0);
+                takePicture.performClick();
+
+            }
+            else if(yourValue.equals("read")){
+                spinnerVisionAPI.setSelection(1);
+                takePicture.performClick();
+            }
+            ///do something with someDouble
+        }
+}
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (myReceiver != null)
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(myReceiver);
+        myReceiver = null;
     }
 }

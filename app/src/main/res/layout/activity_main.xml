@@ -7,7 +7,7 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         tools:context="com.app.androidkt.googlevisionapi.MainActivity">
 
         <ProgressBar
@@ -82,7 +82,7 @@
             android:text="Button" />
 
         <TextView
-            android:id="@+id/speech_to_text_result"
+            android:id="@+id/speech_to_text_resulti"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_above="@+id/spinnerVisionAPI"
