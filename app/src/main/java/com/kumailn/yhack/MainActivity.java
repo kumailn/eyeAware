@@ -41,12 +41,17 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.language.v1.CloudNaturalLanguage;
 import com.google.api.services.language.v1.CloudNaturalLanguageRequestInitializer;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxResponse;
 import com.google.api.services.language.v1.model.AnnotateTextRequest;
 import com.google.api.services.language.v1.model.AnnotateTextResponse;
 import com.google.api.services.language.v1.model.Document;
 import com.google.api.services.language.v1.model.Entity;
 import com.google.api.services.language.v1.model.Features;
+import com.google.api.services.language.v1.model.Sentence;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxRequest;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxResponse;
 import com.google.api.services.language.v1.model.Sentiment;
+import com.google.api.services.language.v1.model.Token;
 import com.google.api.services.vision.v1.Vision;
 import com.google.api.services.vision.v1.VisionRequestInitializer;
 import com.google.api.services.vision.v1.model.AnnotateImageRequest;
@@ -257,45 +262,58 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         final CloudNaturalLanguage naturalLanguageService = builder.build();
 
         // this string should be what you want to analyze
-        String transcript = s;
+        final String transcript = "analyze what is in front of me";
 
-        Document document = new Document();
+        final Document document = new Document();
         document.setType("PLAIN_TEXT");
         document.setLanguage("en-US");
         document.setContent(transcript);
 
-        Features features = new Features();
-        features.setExtractEntities(true);
-        features.setExtractDocumentSentiment(true);
-
-        final AnnotateTextRequest request = new AnnotateTextRequest();
+        final AnalyzeSyntaxRequest request = new AnalyzeSyntaxRequest();
         request.setDocument(document);
-        request.setFeatures(features);
+        request.setEncodingType("UTF16");
 
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    AnnotateTextResponse response =
-                            naturalLanguageService.documents()
-                                    .annotateText(request).execute();
-                    //speech_to_text_result.setText(response.getEntities().get(0).toString());
-                    final List<Entity> entityList = response.getEntities();
-                    final float sentiment = response.getDocumentSentiment().getScore();
+
+                    AnalyzeSyntaxResponse response = naturalLanguageService.documents()
+                            .analyzeSyntax(request).execute();
+
+                    final List<Token> tokenList = response.getTokens();
 
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            String FLAG1 = "false";
+                            String lemmas = "";
+                            String tokens = "";
 
-                            String entities = "";
-                            for(Entity entity:entityList) {
-                                entities += "\n" + entity.getName().toUpperCase();
+                            for (Token t:tokenList){
+                                lemmas += "\n" + t.getLemma();
                             }
+                            for (Token t:tokenList){
+                                tokens += "\n" + t.getText().getContent();
+                            }
+                            // what is * type of strings
+                            for (int i = 0; i < tokenList.size()-1; i++){
+                                if (tokenList.get(i).getText().getContent().toUpperCase().hashCode() == "WHAT".hashCode()) {
+                                    if (tokenList.get(i + 1).getLemma().toUpperCase().hashCode() == "BE".hashCode()) {
+                                        FLAG1 = "picture";
+                                    }
+                                }
+                            }
+                            // * read * or * text *type of strings
+                            if (tokens.contains("read")||tokens.contains("text")){
+                                FLAG1 = "read";
+                            }
+
                             AlertDialog dialog =
                                     new AlertDialog.Builder(MainActivity.this)
-                                            .setTitle("Sentiment: " + sentiment)
-                                            .setMessage("This audio file talks about :"
-                                                    + entities)
+                                            .setTitle("Sentiment: " )
+                                            .setMessage("Text :"
+                                                    + transcript + "\nFLAG :" + FLAG1 )
                                             .setNeutralButton("Okay", null)
                                             .create();
                             dialog.show();
