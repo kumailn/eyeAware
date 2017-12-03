@@ -2,6 +2,7 @@ package com.kumailn.yhack;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -40,8 +41,10 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.language.v1.CloudNaturalLanguage;
 import com.google.api.services.language.v1.CloudNaturalLanguageRequestInitializer;
+import com.google.api.services.language.v1.model.AnnotateTextRequest;
 import com.google.api.services.language.v1.model.AnnotateTextResponse;
 import com.google.api.services.language.v1.model.Document;
+import com.google.api.services.language.v1.model.Entity;
 import com.google.api.services.language.v1.model.Features;
 import com.google.api.services.language.v1.model.Sentiment;
 import com.google.api.services.vision.v1.Vision;
@@ -75,6 +78,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     private static final String TAG = "MainActivity";
     private static final int RECORD_REQUEST_CODE = 101;
     private static final int CAMERA_REQUEST_CODE = 102;
+    private static final String CLOUD_API_KEY = "AIzaSyBFJ2oO0tcJSK2qOre48AM1raYgIw2cO5g";
     TextToSpeech t1;
     private static final String CLOUD_VISION_API_KEY = "AIzaSyA40SjWGfxwULJNqVjkVvw3rSgWLNTc4m0";
 
@@ -86,6 +90,9 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
 
     @BindView(R.id.imageView)
     ImageView imageView;
+
+    @BindView(R.id.analyze)
+    Button analyze;
 
     @BindView(R.id.spinnerVisionAPI)
     Spinner spinnerVisionAPI;
@@ -137,6 +144,12 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             ActivityCompat.requestPermissions((Activity) getApplicationContext(), new String[]{Manifest.permission.CAMERA}, 101);
         }
 
+        analyze.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                callNaturalLanguage("roses are red");
+            }
+        });
 
         takePicture.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -234,7 +247,67 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             }
         }
     }
+    private void callNaturalLanguage(final String s){
+        HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+        CloudNaturalLanguageRequestInitializer requestInitializer = new CloudNaturalLanguageRequestInitializer(CLOUD_API_KEY);
+        CloudNaturalLanguage.Builder builder = new CloudNaturalLanguage.Builder(httpTransport, jsonFactory, null);
+        builder.setCloudNaturalLanguageRequestInitializer(requestInitializer);
+        builder.setApplicationName("Application name");
+        final CloudNaturalLanguage naturalLanguageService = builder.build();
 
+        // this string should be what you want to analyze
+        String transcript = s;
+
+        Document document = new Document();
+        document.setType("PLAIN_TEXT");
+        document.setLanguage("en-US");
+        document.setContent(transcript);
+
+        Features features = new Features();
+        features.setExtractEntities(true);
+        features.setExtractDocumentSentiment(true);
+
+        final AnnotateTextRequest request = new AnnotateTextRequest();
+        request.setDocument(document);
+        request.setFeatures(features);
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    AnnotateTextResponse response =
+                            naturalLanguageService.documents()
+                                    .annotateText(request).execute();
+                    //speech_to_text_result.setText(response.getEntities().get(0).toString());
+                    final List<Entity> entityList = response.getEntities();
+                    final float sentiment = response.getDocumentSentiment().getScore();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            String entities = "";
+                            for(Entity entity:entityList) {
+                                entities += "\n" + entity.getName().toUpperCase();
+                            }
+                            AlertDialog dialog =
+                                    new AlertDialog.Builder(MainActivity.this)
+                                            .setTitle("Sentiment: " + sentiment)
+                                            .setMessage("This audio file talks about :"
+                                                    + entities)
+                                            .setNeutralButton("Okay", null)
+                                            .create();
+                            dialog.show();
+                        }
+                    });
+                }
+                catch (IOException e){
+                }
+                // More code here
+            }
+        });
+    }
     private void callCloudVision(final Bitmap bitmap, final Feature feature) {
         imageUploadProgress.setVisibility(View.VISIBLE);
         final List<Feature> featureList = new ArrayList<>();
@@ -308,6 +381,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         //Log.e("TEXT!: ", imageResponses.getWebDetection().toString());
 
         String message = "";
+        String toSpeak = "";
         switch (api) {
             case "LANDMARK_DETECTION":
                 entityAnnotations = imageResponses.getLandmarkAnnotations();
@@ -339,7 +413,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 WebDetection webDetection = imageResponses.getWebDetection();
                 Log.e("Web", "on");
                 Log.e("First MSG: ", webDetection.getWebEntities().get(0).getDescription());
-                String toSpeak = webDetection.getWebEntities().get(0).getDescription();
+                toSpeak = webDetection.getWebEntities().get(0).getDescription();
                 //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
                 //t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
                 for (WebEntity entity : webDetection.getWebEntities()) {
@@ -353,6 +427,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 }
                 t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
         }
+        callNaturalLanguage(toSpeak);
         return message;
     }
 
