@@ -1,9 +1,11 @@
 package com.kumailn.yhack;
 
+import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -19,8 +21,21 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.language.v1.CloudNaturalLanguage;
+import com.google.api.services.language.v1.CloudNaturalLanguageRequestInitializer;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxRequest;
+import com.google.api.services.language.v1.model.AnalyzeSyntaxResponse;
+import com.google.api.services.language.v1.model.Document;
+import com.google.api.services.language.v1.model.Token;
+
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MyService extends Service
 {
@@ -296,5 +311,79 @@ public class MyService extends Service
 
         }
 
+    }
+
+    private String callNaturalLanguage(final String s) {
+        HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+        JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+        CloudNaturalLanguageRequestInitializer requestInitializer = new CloudNaturalLanguageRequestInitializer(CLOUD_API_KEY);
+        CloudNaturalLanguage.Builder builder = new CloudNaturalLanguage.Builder(httpTransport, jsonFactory, null);
+        builder.setCloudNaturalLanguageRequestInitializer(requestInitializer);
+        builder.setApplicationName("Application name");
+        final CloudNaturalLanguage naturalLanguageService = builder.build();
+
+        // this string should be what you want to analyze
+        //final String transcript = "analyze what is in front of me";
+        final String transcript = s;
+
+        final Document document = new Document();
+        document.setType("PLAIN_TEXT");
+        document.setLanguage("en-US");
+        document.setContent(transcript);
+
+        final AnalyzeSyntaxRequest request = new AnalyzeSyntaxRequest();
+        request.setDocument(document);
+        request.setEncodingType("UTF16");
+        final String[] FLAG1 = new String[1];
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    AnalyzeSyntaxResponse response = naturalLanguageService.documents()
+                            .analyzeSyntax(request).execute();
+
+                    final List<Token> tokenList = response.getTokens();
+
+
+                            FLAG1[0] = "false";
+                            String lemmas = "";
+                            String tokens = "";
+
+                            for (Token t : tokenList) {
+                                lemmas += "\n" + t.getLemma();
+                            }
+                            for (Token t : tokenList) {
+                                tokens += "\n" + t.getText().getContent();
+                            }
+                            // what is * type of strings
+                            for (int i = 0; i < tokenList.size() - 1; i++) {
+                                if (tokenList.get(i).getText().getContent().toUpperCase().hashCode() == "WHAT".hashCode()) {
+                                    if (tokenList.get(i + 1).getLemma().toUpperCase().hashCode() == "BE".hashCode()) {
+                                        FLAG1[0] = "picture";
+                                    }
+                                }
+                            }
+                            // * read * or * text *type of strings
+                            if (tokens.contains("read") || tokens.contains("text")) {
+                                FLAG1[0] = "read";
+                            }
+/*
+                            AlertDialog dialog =
+                                    new AlertDialog.Builder(MainActivity.this)
+                                            .setTitle("Sentiment: ")
+                                            .setMessage("Text :"
+                                                    + transcript + "\nFLAG :" + FLAG1[0])
+                                            .setNeutralButton("Okay", null)
+                                            .create();
+                            dialog.show();
+                        */
+
+                } catch (IOException e) {
+                }
+                // More code here
+            }
+        });
+        return FLAG1[0];
     }
 }

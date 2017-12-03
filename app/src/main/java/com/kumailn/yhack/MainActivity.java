@@ -167,7 +167,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         final CameraConfig mCameraConfig = new CameraConfig()
                 .getBuilder(getApplicationContext())
                 .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
-                .setCameraResolution(CameraResolution.HIGH_RESOLUTION)
+                .setCameraResolution(CameraResolution.LOW_RESOLUTION)
                 .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                 .setImageRotation(CameraRotation.ROTATION_270)
                 .build();
@@ -330,7 +330,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             }
         }
     }
-    private void callNaturalLanguage(final String s){
+    private String callNaturalLanguage(final String s) {
         HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
         JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
         CloudNaturalLanguageRequestInitializer requestInitializer = new CloudNaturalLanguageRequestInitializer(CLOUD_API_KEY);
@@ -340,7 +340,8 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         final CloudNaturalLanguage naturalLanguageService = builder.build();
 
         // this string should be what you want to analyze
-        final String transcript = "analyze what is in front of me";
+        //final String transcript = "analyze what is in front of me";
+        final String transcript = s;
 
         final Document document = new Document();
         document.setType("PLAIN_TEXT");
@@ -350,7 +351,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         final AnalyzeSyntaxRequest request = new AnalyzeSyntaxRequest();
         request.setDocument(document);
         request.setEncodingType("UTF16");
-
+        final String[] FLAG1 = new String[1];
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
@@ -364,46 +365,47 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            String FLAG1 = "false";
+                            FLAG1[0] = "false";
                             String lemmas = "";
                             String tokens = "";
 
-                            for (Token t:tokenList){
+                            for (Token t : tokenList) {
                                 lemmas += "\n" + t.getLemma();
                             }
-                            for (Token t:tokenList){
+                            for (Token t : tokenList) {
                                 tokens += "\n" + t.getText().getContent();
                             }
                             // what is * type of strings
-                            for (int i = 0; i < tokenList.size()-1; i++){
+                            for (int i = 0; i < tokenList.size() - 1; i++) {
                                 if (tokenList.get(i).getText().getContent().toUpperCase().hashCode() == "WHAT".hashCode()) {
                                     if (tokenList.get(i + 1).getLemma().toUpperCase().hashCode() == "BE".hashCode()) {
-                                        FLAG1 = "picture";
+                                        FLAG1[0] = "picture";
                                     }
                                 }
                             }
                             // * read * or * text *type of strings
-                            if (tokens.contains("read")||tokens.contains("text")){
-                                FLAG1 = "read";
+                            if (tokens.contains("read") || tokens.contains("text")) {
+                                FLAG1[0] = "read";
                             }
 
                             AlertDialog dialog =
                                     new AlertDialog.Builder(MainActivity.this)
-                                            .setTitle("Sentiment: " )
+                                            .setTitle("Sentiment: ")
                                             .setMessage("Text :"
-                                                    + transcript + "\nFLAG :" + FLAG1 )
+                                                    + transcript + "\nFLAG :" + FLAG1[0])
                                             .setNeutralButton("Okay", null)
                                             .create();
                             dialog.show();
                         }
                     });
-                }
-                catch (IOException e){
+                } catch (IOException e) {
                 }
                 // More code here
             }
         });
+        return FLAG1[0];
     }
+
     private void callCloudVision(final Bitmap bitmap, final Feature feature) {
         imageUploadProgress.setVisibility(View.VISIBLE);
         final List<Feature> featureList = new ArrayList<>();
@@ -507,12 +509,12 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             case "TEXT_DETECTION":
                 try{
                     Log.e("TEXT: ", imageResponses.getFullTextAnnotation().getText());
-                    String toSpeak = imageResponses.getFullTextAnnotation().getText();
+                    toSpeak = imageResponses.getFullTextAnnotation().getText();
                     //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
                     t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
                 }
                 catch(Exception e){
-                    String toSpeak = "Sorry, I didn't find any text.";
+                    toSpeak = "Sorry, I didn't find any text.";
                     //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
                     t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
                 }
