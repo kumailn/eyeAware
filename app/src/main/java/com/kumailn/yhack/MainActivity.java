@@ -341,11 +341,17 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 Log.e("First MSG: ", webDetection.getWebEntities().get(0).getDescription());
                 String toSpeak = webDetection.getWebEntities().get(0).getDescription();
                 //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
-                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+                //t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
                 for (WebEntity entity : webDetection.getWebEntities()) {
+                    if (entity.getDescription().toLowerCase().contains("dollar"))
+                    {
+                        toSpeak = entity.getDescription();
+                        break;
+                    }
                     Log.e("", entity.getDescription() + " : " + entity.getEntityId() + " : "
                             + entity.getScore());
                 }
+                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
         }
         return message;
     }
