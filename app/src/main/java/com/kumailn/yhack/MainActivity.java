@@ -10,6 +10,9 @@ import android.graphics.Matrix;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -50,15 +53,21 @@ import com.google.api.services.vision.v1.model.AnnotateImageRequest;
 import com.google.api.services.vision.v1.model.AnnotateImageResponse;
 import com.google.api.services.vision.v1.model.BatchAnnotateImagesRequest;
 import com.google.api.services.vision.v1.model.BatchAnnotateImagesResponse;
+import com.google.api.services.vision.v1.model.Block;
 import com.google.api.services.vision.v1.model.ColorInfo;
 import com.google.api.services.vision.v1.model.DominantColorsAnnotation;
 import com.google.api.services.vision.v1.model.EntityAnnotation;
 import com.google.api.services.vision.v1.model.Feature;
 import com.google.api.services.vision.v1.model.Image;
 import com.google.api.services.vision.v1.model.ImageProperties;
+import com.google.api.services.vision.v1.model.Page;
+import com.google.api.services.vision.v1.model.Paragraph;
 import com.google.api.services.vision.v1.model.SafeSearchAnnotation;
+import com.google.api.services.vision.v1.model.Symbol;
+import com.google.api.services.vision.v1.model.TextAnnotation;
 import com.google.api.services.vision.v1.model.WebDetection;
 import com.google.api.services.vision.v1.model.WebEntity;
+import com.google.api.services.vision.v1.model.Word;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -75,6 +84,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     private static final String TAG = "MainActivity";
     private static final int RECORD_REQUEST_CODE = 101;
     private static final int CAMERA_REQUEST_CODE = 102;
+    private SpeechRecognizer sr;
     TextToSpeech t1;
     private static final String CLOUD_VISION_API_KEY = "AIzaSyA40SjWGfxwULJNqVjkVvw3rSgWLNTc4m0";
 
@@ -94,7 +104,9 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
     TextView visionAPIData;
     private Feature feature;
     private Bitmap bitmap;
-    private String[] visionAPI = new String[]{"LANDMARK_DETECTION", "LOGO_DETECTION", "SAFE_SEARCH_DETECTION", "IMAGE_PROPERTIES", "LABEL_DETECTION", "WEB_DETECTION"};
+    Button speakButton;
+    //private String[] visionAPI = new String[]{"LANDMARK_DETECTION", "LOGO_DETECTION", "SAFE_SEARCH_DETECTION", "IMAGE_PROPERTIES", "LABEL_DETECTION", "WEB_DETECTION", "TEXT_DETECTION"};
+    private String[] visionAPI = new String[]{"WEB_DETECTION", "TEXT_DETECTION"};
 
     private String api = visionAPI[0];
 
@@ -103,7 +115,23 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
+        speakButton = findViewById(R.id.button2);
+        speakButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"voice.recognition.test");
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, new Long(50000));
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, new Long(50000));
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, new Long(50000));
+                intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,500);
+                sr.startListening(intent);
+                Log.i("111111","11111111");
+            }
+        });
+        sr = SpeechRecognizer.createSpeechRecognizer(this);
+        sr.setRecognitionListener((RecognitionListener) new listener());
         feature = new Feature();
         feature.setType(visionAPI[0]);
         feature.setMaxResults(10);
@@ -124,7 +152,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
         final CameraConfig mCameraConfig = new CameraConfig()
                 .getBuilder(getApplicationContext())
                 .setCameraFacing(CameraFacing.REAR_FACING_CAMERA)
-                .setCameraResolution(CameraResolution.MEDIUM_RESOLUTION)
+                .setCameraResolution(CameraResolution.HIGH_RESOLUTION)
                 .setImageFormat(CameraImageFormat.FORMAT_JPEG)
                 .setImageRotation(CameraRotation.ROTATION_270)
                 .build();
@@ -143,6 +171,7 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             public void onClick(View v) {
                 takePicture();
 
+
             }
         });
 
@@ -155,38 +184,84 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
             }
         });
 
-        takePicture.setOnLongClickListener(new View.OnLongClickListener() {
+
+
+
+        speakButton.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-   /*             String toSpeak = "This is a test string";
-                Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
-                t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);*/
-
-           /*     final CloudNaturalLanguage naturalLanguageService = new CloudNaturalLanguage.Builder(
-                        AndroidHttp.newCompatibleTransport(),
-                        new AndroidJsonFactory(),
-                        null
-                ).setCloudNaturalLanguageRequestInitializer(
-                        new CloudNaturalLanguageRequestInitializer("AIzaSyC81BQBhjKdwFt3p68CgWTzR9aR5HVELYQ")
-                ).build();
-
-                Document document = new Document();
-                document.setType("PLAIN_TEXT");
-                document.setLanguage("en-US");
-                document.setContent(transcript);
-
-
-
-                Features features = new Features();
-                features.setExtractEntities(true);
-                features.setExtractDocumentSentiment(true);
-*/
-
-
+                startService(new Intent(getApplicationContext(), MyService.class));
                 return true;
             }
         });
 
+    }
+
+    class listener implements RecognitionListener
+    {
+        public void onReadyForSpeech(Bundle params)
+        {
+            Log.d(TAG, "onReadyForSpeech");
+        }
+        public void onBeginningOfSpeech()
+        {
+            Log.d(TAG, "onBeginningOfSpeech");
+        }
+        public void onRmsChanged(float rmsdB)
+        {
+            Log.d(TAG, "onRmsChanged");
+        }
+        public void onBufferReceived(byte[] buffer)
+        {
+            Log.d(TAG, "onBufferReceived");
+        }
+        public void onEndOfSpeech()
+        {
+            Log.d(TAG, "onEndofSpeech");
+        }
+        public void onError(int error)
+        {
+            sr.cancel();
+            speakButton.performClick();
+
+            Log.d(TAG,  "error " +  error);
+            visionAPIData.setText("error " + error);
+        }
+        public void onResults(Bundle results)
+        {
+            String str = new String();
+            Log.d(TAG, "onResults " + results);
+            ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            for (int i = 0; i < data.size(); i++)
+            {
+                Log.d(TAG, "result " + data.get(i));
+                str += data.get(i);
+            }
+            visionAPIData.setText("results: "+String.valueOf(data.get(data.size()-1)));
+            speakButton.performClick();
+
+        }
+        public void onPartialResults(Bundle partialResults)
+        {
+            Log.d(TAG, "onPartialResults");
+            Log.e("Partial Results: ", partialResults.toString());
+        }
+        public void onEvent(int eventType, Bundle params)
+        {
+            Log.d(TAG, "onEvent " + eventType);
+        }
+    }
+    public void clickt(View v) {
+        if (v.getId() == R.id.button2)
+        {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"voice.recognition.test");
+
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
+            sr.startListening(intent);
+            Log.i("111111","11111111");
+        }
     }
 
     @Override
@@ -334,7 +409,28 @@ public class MainActivity extends HiddenCameraActivity implements AdapterView.On
                 message = formatAnnotation(entityAnnotations);
                 Log.e("MSG: ", message);
                 break;
+            case "TEXT_DETECTION":
+                try{
+                    Log.e("TEXT: ", imageResponses.getFullTextAnnotation().getText());
+                    String toSpeak = imageResponses.getFullTextAnnotation().getText();
+                    //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
+                    t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+                }
+                catch(Exception e){
+                    String toSpeak = "Sorry, I didn't find any text.";
+                    //Toast.makeText(getApplicationContext(), toSpeak, Toast.LENGTH_SHORT).show();
+                    t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+                }
 
+
+/*
+                // For full list of available annotations, see http://g.co/cloud/vision/docs
+                for (EntityAnnotation ann : imageResponses.getTextAnnotations()) {
+                    Log.e("Text: %s\n", ann.getDescription());
+                    //out.printf("Position : %s\n", annotation.getBoundingPoly());
+                }*/
+                message = "";
+                break;
             case "WEB_DETECTION":
                 WebDetection webDetection = imageResponses.getWebDetection();
                 Log.e("Web", "on");

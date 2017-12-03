@@ -60,5 +60,15 @@
             android:gravity="left"
             android:textSize="18dp"
             tools:text="Text LAbele" />
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="19dp"
+            android:text="Button" />
     </RelativeLayout>
 </ScrollView>

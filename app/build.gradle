@@ -47,5 +47,7 @@ dependencies {
 
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
     compile 'commons-io:commons-io:2.5'
+    compile 'net.gotev:speech:1.1.2'
+
 
 }
